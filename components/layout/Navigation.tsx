@@ -40,10 +40,10 @@ export function Navigation() {
           </div>
           <div>
             <h1 className="font-serif-magical text-lg font-bold tracking-wide text-[#E9DCC1] leading-tight">
-              Hogwarts
+              Grimmoire
             </h1>
-            <p className="text-xs tracking-widest uppercase text-[#C5A56A]/80 font-medium">
-              Grand Library
+            <p className="text-[10px] tracking-wider uppercase text-[#C5A56A]/80 font-medium">
+              The Hogwarts Library
             </p>
           </div>
         </div>

@@ -77,7 +77,7 @@ export function SettingsClient({
 
       const archiveBackup = {
         exportedAt: new Date().toISOString(),
-        libraryTitle: "The Hogwarts Library — Archive Backup",
+        libraryTitle: "Grimmoire: The Hogwarts Library — Archive Backup",
         scholar: user,
         stats: statsData,
         books: booksData.books || [],

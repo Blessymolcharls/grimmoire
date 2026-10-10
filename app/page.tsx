@@ -130,7 +130,10 @@ export default async function EntrancePage() {
           </div>
 
           <h1 className="font-serif-magical text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[#E9DCC1] tracking-wide leading-tight drop-shadow-md">
-            The Hogwarts Library
+            Grimmoire
+            <span className="block text-xl sm:text-3xl lg:text-4xl text-[#C5A56A] font-semibold mt-1">
+              The Hogwarts Library
+            </span>
           </h1>
 
           <p className="font-serif-magical italic text-lg sm:text-xl text-[#F3D9A0]/90 font-light leading-relaxed">

@@ -18,10 +18,10 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "The Hogwarts Library — A Magical Archive of My Reading Life",
+  title: "Grimmoire — The Hogwarts Library",
   description:
     "An atmospheric, interactive digital sanctuary chronicling books read, worlds visited, and memories preserved in the castle halls.",
-  keywords: ["reading tracker", "hogwarts library", "bookshelf", "reading journal", "magical archive"],
+  keywords: ["reading tracker", "grimmoire", "hogwarts library", "bookshelf", "reading journal", "magical archive"],
 };
 
 export default function RootLayout({

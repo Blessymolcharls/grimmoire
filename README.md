@@ -1,8 +1,8 @@
-# The Hogwarts Library — A Magical Archive of My Reading Life
+# Grimmoire — The Hogwarts Library
 
 > *"Every book is a world you have visited, a memory engraved in parchment, and a flame against the dark."*
 
-**The Hogwarts Library** is a production-grade, immersive personal digital library and reading chronicle designed as a living castle archive. Every volume represents a journey undertaken, complete with interactive 2D wooden bookshelves, physical textured book spines, Open Library metadata discovery, an astronomical reading observatory, thematic magical departments, excerpted quotes, and a parchment reading journal.
+**Grimmoire: The Hogwarts Library** is a production-grade, immersive personal digital library and reading chronicle designed as a living castle archive. Every volume represents a journey undertaken, complete with interactive 2D wooden bookshelves, physical textured book spines, Open Library metadata discovery, an astronomical reading observatory, thematic magical departments, excerpted quotes, and a parchment reading journal.
 
 ---
 
