@@ -1,0 +1,181 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String           @id @default(cuid())
+  email           String?          @unique
+  displayName     String           @default("Magical Scholar")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  books           Book[]
+  readingSessions ReadingSession[]
+  journalEntries  JournalEntry[]
+  readingGoals    ReadingGoal[]
+  departments     Department[]
+  tags            Tag[]
+}
+
+model Book {
+  id                String            @id @default(cuid())
+  userId            String
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title             String
+  normalizedTitle   String
+  authors           String            // Stored as JSON string or comma-separated list of author names
+  description       String?
+  coverUrl          String?
+  publicationYear   Int?
+  publisher         String?
+  isbn10            String?
+  isbn13            String?
+  pageCount         Int?
+  externalProvider  String?           // e.g. "openlibrary", "googlebooks", "manual"
+  externalProviderId String?
+  readingStatus     String            @default("WANT_TO_READ") // WANT_TO_READ, CURRENTLY_READING, COMPLETED, ON_HOLD, DID_NOT_FINISH
+  rating            Int?              // 1 to 5
+  isFavorite        Boolean           @default(false)
+  dateStarted       DateTime?
+  dateCompleted     DateTime?
+  currentPage       Int?              @default(0)
+  personalReview    String?
+  favoriteCharacter String?
+  notes             String?           // Personal reading memories & reflections
+  spineColor        String?           // Hex color for the book spine in 2D bookshelf
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  departments       BookDepartment[]
+  tags              BookTag[]
+  quotes            Quote[]
+  readingSessions   ReadingSession[]
+  journalEntries    JournalEntryBook[]
+
+  @@index([userId])
+  @@index([normalizedTitle])
+  @@index([readingStatus])
+  @@index([isFavorite])
+}
+
+model Department {
+  id          String           @id @default(cuid())
+  userId      String?          // null for system default departments
+  user        User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  slug        String
+  description String?
+  icon        String?          // Lucide icon name or emoji glyph
+  accentColor String?          // Hex or CSS color
+  isSystem    Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+
+  books       BookDepartment[]
+
+  @@unique([userId, slug])
+  @@index([slug])
+}
+
+model BookDepartment {
+  bookId       String
+  departmentId String
+  book         Book       @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, departmentId])
+}
+
+model Tag {
+  id             String    @id @default(cuid())
+  userId         String?
+  user           User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  normalizedName String
+  createdAt      DateTime  @default(now())
+
+  books          BookTag[]
+
+  @@unique([userId, normalizedName])
+}
+
+model BookTag {
+  bookId String
+  tagId  String
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, tagId])
+}
+
+model Quote {
+  id           String   @id @default(cuid())
+  bookId       String
+  book         Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  text         String
+  pageNumber   Int?
+  personalNote String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([bookId])
+}
+
+model ReadingSession {
+  id              String   @id @default(cuid())
+  bookId          String
+  book            Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startedAt       DateTime @default(now())
+  durationMinutes Int?
+  pagesRead       Int?
+  note            String?
+  createdAt       DateTime @default(now())
+
+  @@index([bookId])
+  @@index([userId])
+}
+
+model JournalEntry {
+  id        String             @id @default(cuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  content   String
+  entryDate DateTime           @default(now())
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  books     JournalEntryBook[]
+
+  @@index([userId])
+  @@index([entryDate])
+}
+
+model JournalEntryBook {
+  journalEntryId String
+  bookId         String
+  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  book           Book         @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@id([journalEntryId, bookId])
+}
+
+model ReadingGoal {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  year        Int
+  targetBooks Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, year])
+}
