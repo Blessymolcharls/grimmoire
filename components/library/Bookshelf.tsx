@@ -133,11 +133,13 @@ export function Bookshelf({ initialBooks, departments, onRefresh }: BookshelfPro
               placeholder="Search by title, author, or secret lore..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search library tomes by title or author"
               className="w-full bg-[#100D18]/90 border border-[#C5A56A]/30 rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#E9DCC1] placeholder-[#8E8495] focus:outline-none focus:border-[#C5A56A] transition-colors"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
+                aria-label="Clear search input"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8E8495] hover:text-[#E9DCC1]"
               >
                 Clear
@@ -151,6 +153,7 @@ export function Bookshelf({ initialBooks, departments, onRefresh }: BookshelfPro
             <select
               value={selectedDepartment}
               onChange={(e) => setSelectedDepartment(e.target.value)}
+              aria-label="Filter by magical department"
               className="bg-[#100D18] border border-[#C5A56A]/30 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-[#E9DCC1] focus:outline-none focus:border-[#C5A56A]"
             >
               <option value="all">All Departments</option>
@@ -165,6 +168,7 @@ export function Bookshelf({ initialBooks, departments, onRefresh }: BookshelfPro
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
+              aria-label="Filter by reading status"
               className="bg-[#100D18] border border-[#C5A56A]/30 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-[#E9DCC1] focus:outline-none focus:border-[#C5A56A]"
             >
               <option value="all">All Statuses</option>
@@ -179,6 +183,7 @@ export function Bookshelf({ initialBooks, departments, onRefresh }: BookshelfPro
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
+              aria-label="Sort books order"
               className="bg-[#100D18] border border-[#C5A56A]/30 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-[#E9DCC1] focus:outline-none focus:border-[#C5A56A]"
             >
               <option value="recently_added">Recently Added</option>

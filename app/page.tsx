@@ -14,6 +14,7 @@ import {
   Clock,
 } from "lucide-react";
 import { BookCard } from "@/components/books/BookCard";
+import { calculatePagesRead, calculateReadingStreak } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,8 @@ export default async function EntrancePage() {
     recentBooks,
     departments,
     sessions,
+    completedBooksDates,
+    allBooksPages,
   ] = await Promise.all([
     prisma.book.count({ where: { userId: user.id } }),
     prisma.book.count({ where: { userId: user.id, readingStatus: "COMPLETED" } }),
@@ -66,21 +69,18 @@ export default async function EntrancePage() {
       where: { userId: user.id },
       select: { startedAt: true },
     }),
+    prisma.book.findMany({
+      where: { userId: user.id, readingStatus: "COMPLETED", dateCompleted: { not: null } },
+      select: { dateCompleted: true },
+    }),
+    prisma.book.findMany({
+      where: { userId: user.id },
+      select: { pageCount: true, currentPage: true, readingStatus: true },
+    }),
   ]);
 
   // Total pages
-  const allBooksPages = await prisma.book.findMany({
-    where: { userId: user.id },
-    select: { pageCount: true, currentPage: true, readingStatus: true },
-  });
-  let totalPages = 0;
-  for (const b of allBooksPages) {
-    if (b.readingStatus === "COMPLETED" && b.pageCount) {
-      totalPages += b.pageCount;
-    } else if (b.currentPage) {
-      totalPages += b.currentPage;
-    }
-  }
+  const totalPages = calculatePagesRead(allBooksPages);
 
   // Favorite department
   const sortedDepts = departments
@@ -89,17 +89,10 @@ export default async function EntrancePage() {
   const favoriteDepartment = sortedDepts[0]?.name || "Sanctum Privatum";
 
   // Reading streak
-  const dateSet = new Set<string>();
-  sessions.forEach((s) => dateSet.add(s.startedAt.toISOString().split("T")[0]));
-  let streak = 0;
-  const today = new Date();
-  const checkDate = new Date(today);
-  const todayStr = checkDate.toISOString().split("T")[0];
-  if (!dateSet.has(todayStr)) checkDate.setDate(checkDate.getDate() - 1);
-  while (dateSet.has(checkDate.toISOString().split("T")[0])) {
-    streak += 1;
-    checkDate.setDate(checkDate.getDate() - 1);
-  }
+  const streak = calculateReadingStreak(
+    sessions.map((s) => s.startedAt),
+    completedBooksDates.map((b) => b.dateCompleted as Date)
+  );
 
   const formattedRecentBooks = recentBooks.map((b) => ({
     ...b,

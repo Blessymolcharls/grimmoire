@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Star, Bookmark } from "lucide-react";
 
 export interface BookSpineData {
@@ -45,13 +45,15 @@ export function BookSpine({ book, onSelect, index = 0 }: BookSpineProps) {
     }
   };
 
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: Math.min(0.5, index * 0.03) }}
-      whileHover={{ y: -16, scale: 1.03 }}
-      whileTap={{ scale: 0.98 }}
+      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 15 }}
+      animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: shouldReduceMotion ? 0 : Math.min(0.4, index * 0.02) }}
+      whileHover={shouldReduceMotion ? {} : { y: -16, scale: 1.03 }}
+      whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
       onClick={() => onSelect(book.id)}
       role="button"
       tabIndex={0}
@@ -67,7 +69,7 @@ export function BookSpine({ book, onSelect, index = 0 }: BookSpineProps) {
         width: `${width}px`,
         backgroundColor: spineBg,
       }}
-      className="book-spine relative flex-shrink-0 cursor-pointer rounded-t-sm shadow-md border-t border-r border-[#C5A56A]/30 overflow-hidden flex flex-col justify-between items-center py-2 px-1 select-none focus:outline-none focus:ring-2 focus:ring-[#C5A56A]"
+      className="book-spine relative flex-shrink-0 cursor-pointer rounded-t-sm shadow-md border-t border-r border-[#C5A56A]/30 overflow-hidden flex flex-col justify-between items-center py-2 px-1 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A56A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#100D18]"
     >
       {/* Antique Texture & Spine Ribs Overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-white/10 to-black/45 pointer-events-none" />

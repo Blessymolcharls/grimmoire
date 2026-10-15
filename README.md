@@ -2,20 +2,29 @@
 
 > *"Every book is a world you have visited, a memory engraved in parchment, and a flame against the dark."*
 
-**Grimmoire: The Hogwarts Library** is a production-grade, immersive personal digital library and reading chronicle designed as a living castle archive. Every volume represents a journey undertaken, complete with interactive 2D wooden bookshelves, physical textured book spines, Open Library metadata discovery, an astronomical reading observatory, thematic magical departments, excerpted quotes, and a parchment reading journal.
+[![CI](https://github.com/Blessymolcharls/grimmoire/actions/workflows/ci.yml/badge.svg)](https://github.com/Blessymolcharls/grimmoire/actions/workflows/ci.yml)
+![Next.js](https://img.shields.io/badge/Next.js-16.4.0-black?logo=next.js)
+![React](https://img.shields.io/badge/React-19.3.0-blue?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4-38B2AC?logo=tailwind-css)
+![Prisma](https://img.shields.io/badge/Prisma-6.4.1-2D3748?logo=prisma)
+![Vitest](https://img.shields.io/badge/Vitest-5.0.3-6E9F18?logo=vitest)
+
+**Grimmoire: The Hogwarts Library** is an atmospheric, production-grade personal digital library, knowledge archive, and reading chronicle designed as a living castle archive. Rather than presenting a generic CRUD dashboard, Grimmoire immerses scholars in the aesthetic of a gothic castle library—featuring realistic 2D wooden bookshelves, gold-foil book spines, a two-page manuscript reader, Open Library book discovery, an astronomical reading observatory, thematic magical departments, excerpted quotes, a parchment reading journal, and versioned archive backup and restoration.
 
 ---
 
 ## ✦ Key Features
 
-- **The Entrance (`/`)**: Atmospheric high-fantasy landing with real database statistics (tomes shelved, pages absorbed, rating, reading streak), quick actions, and recently visited worlds.
-- **My Shelves (`/library`)**: A realistic 2D wooden bookshelf environment (`Sanctum Bibliotheca`) featuring deterministic book spine heights, custom colors, gold foil titles, hover elevation, and an open tome modal. Supports filtering by department, reading status, search, and sorting.
-- **Open Tome Experience (`/books/[id]`)**: Two-page open manuscript layout with literary metadata on the left and personal reading records, quotes, sessions, and reflections on the right.
-- **Discover Tomes (`/discover`)**: Real-time debounced external search against the Open Library API and Open Library Covers service, curated starter recommendations, and manual tome scribing.
-- **Magical Departments (`/departments`)**: 9 castle departments (*Charms*, *Potions*, *Defense Against the Dark Arts*, *Divination*, *History of Magic*, *Transfiguration*, *Care of Magical Creatures*, *Astronomy Tower*, *Restricted Section*) with many-to-many book assignments and custom department creation.
+- **The Entrance (`/`)**: Atmospheric castle landing with real database statistics (tomes shelved, pages absorbed, average rating, reading streak), quick actions, and recently visited worlds.
+- **My Shelves (`/library`)**: A tactile 2D wooden bookshelf environment (`Sanctum Bibliotheca`) featuring deterministic spine dimensions and colors, gold foil titles, hover elevation, keyboard navigation, and an open tome modal. Supports department filtering, reading status filtering, instant search, and sorting.
+- **Open Tome Manuscript (`/books/[id]`)**: Two-page open manuscript layout with literary metadata on the left and personal reading records, quotes, sessions, and reflections on the right.
+- **Discover Tomes (`/discover`)**: Debounced external search with request cancellation against the Open Library Search and Covers API, curated starter recommendations, and manual tome scribing.
+- **Magical Departments (`/departments`)**: 9 documented castle departments (*Charms*, *Potions*, *Defense Against the Dark Arts*, *Divination*, *History of Magic*, *Transfiguration*, *Care of Magical Creatures*, *Astronomy Tower*, *Restricted Section*) with many-to-many book assignments and custom department creation.
 - **Reading Journal (`/journal`)**: Intimate chronicle for reflections, memories, and reading notes linked to specific library volumes.
-- **The Observatory (`/observatory`)**: Celestial analytics dashboard displaying annual reading goals, monthly completion charts, page metrics, and department distributions.
-- **Library Settings (`/settings`)**: Scholar profile, annual goal configurator, storage architecture overview, and complete JSON archive backup export.
+- **The Observatory (`/observatory`)**: Celestial analytics dashboard displaying annual reading goals, monthly completion charts, page metrics, and department distributions derived strictly from persisted data.
+- **Library Settings & Backups (`/settings`)**: Scholar profile, annual reading goal configurator, storage architecture overview, complete versioned JSON archive export (`v1.0.0`), and safe archive restoration with dry-run preview and duplicate protection.
+- **Graceful Error Recovery & 404**: Atmospheric castle-themed error boundary (`app/error.tsx`) and custom 404 screen (`app/not-found.tsx`).
 
 ---
 
@@ -23,25 +32,25 @@
 
 - **Framework**: Next.js 16 (App Router, Turbopack, Server & Client Components)
 - **UI & Styling**: React 19, Tailwind CSS v4, Google Fonts (`Cinzel` & `Plus Jakarta Sans`)
-- **Animation**: Framer Motion (`motion`), `canvas-confetti`
+- **Animation & FX**: Framer Motion (`useReducedMotion` support), `canvas-confetti`
 - **Icons**: Lucide React
-- **Validation**: Zod
-- **Database & ORM**: PostgreSQL-ready schema with Prisma ORM
-  - **Local Zero-Config Dev**: SQLite (`dev.db`) running out-of-the-box on any machine
+- **Validation**: Zod (runtime validation at all API boundaries and backup imports)
+- **Database & ORM**: Prisma ORM with dual-engine configuration:
+  - **Local Development**: SQLite (`dev.db`) running zero-config out of the box
   - **Hosted Production**: PostgreSQL (`prisma/schema.postgresql.prisma`) for Supabase, Neon, Railway, or AWS RDS
-- **Testing**: Vitest, Playwright-ready, ESLint
+- **Testing & Quality**: Vitest unit test suite (29 tests), ESLint 9, strict TypeScript, GitHub Actions CI
 
 ---
 
 ## ✦ Quick Start (Local Development)
 
 ### 1. Prerequisites
-- Node.js `v20+` or `v24+`
-- npm `v10+` or `v11+`
+- Node.js `v20.x` or higher
+- npm `v10.x` or higher
 
 ### 2. Installation
 ```bash
-git clone <repo-url>
+git clone https://github.com/Blessymolcharls/grimmoire.git
 cd grimmoire
 npm install
 ```
@@ -52,7 +61,7 @@ Copy the example environment configuration:
 cp .env.example .env
 ```
 
-Default `.env` for zero-config local development:
+Default zero-config `.env`:
 ```env
 DATABASE_URL="file:./dev.db"
 NODE_ENV="development"
@@ -63,7 +72,7 @@ NEXTAUTH_URL="http://localhost:3000"
 ### 4. Database Initialization & Seed
 Synchronize the Prisma schema and populate the default departments, starter books, quotes, sessions, and journal entries:
 ```bash
-# Push schema to local database
+# Push schema to local SQLite database
 npm run db:push
 
 # Seed default departments and sample archive
@@ -79,48 +88,60 @@ npm run dev
 npm run build
 npm run start
 ```
-Open **[http://localhost:3000](http://localhost:3000)** in your browser to enter the library!
+Open **[http://localhost:3000](http://localhost:3000)** in your browser to enter the library.
 
 ---
 
 ## ✦ Verification & Testing
 
-Run the Vitest test suite (normalization utilities, validation schemas, and goals):
+Grimmoire maintains a rigorous automated testing and verification suite:
+
 ```bash
+# Run the 29-test Vitest suite
 npm test
-```
 
-Run ESLint checks:
-```bash
+# Run ESLint checks
 npm run lint
-```
 
-Build verification:
-```bash
+# Run TypeScript type checks
+npx tsc --noEmit
+
+# Verify optimized production build
 npm run build
 ```
 
 ---
 
+## ✦ Archive Backup & Recovery (`v1.0.0`)
+
+Grimmoire provides full user data sovereignty through its versioned backup engine:
+1. **Export Full Archive**: Downloads a structured JSON payload containing all books, quotes, reading sessions, departments, journal entries, and reading goals (`/api/backup/export`).
+2. **Safe Restoration**: Uploads a JSON archive (`/api/backup/import`).
+   - **Dry-Run Preview**: Inspects the archive and reports exact counts of new tomes and preserved existing tomes without touching the database.
+   - **Duplicate Protection**: Existing books (matched by normalized title or ISBN-13) are kept and never overwritten.
+   - **Atomic Transaction**: Applied in a single Prisma transaction to prevent partial state corruption.
+
+---
+
 ## ✦ Production Deployment with PostgreSQL
 
-To deploy to Vercel with hosted PostgreSQL (Supabase, Neon, Railway):
+To deploy to Vercel, Railway, Render, or Fly.io with hosted PostgreSQL:
 
-1. **Copy the PostgreSQL Schema**:
+1. **Activate the PostgreSQL Schema**:
    ```bash
    cp prisma/schema.postgresql.prisma prisma/schema.prisma
    ```
 
 2. **Configure Environment Variables**:
-   In your hosting provider dashboard (e.g. Vercel), set:
+   In your hosting dashboard, set:
    ```env
    DATABASE_URL="postgresql://user:password@host:5432/database?schema=public"
    NODE_ENV="production"
-   NEXTAUTH_SECRET="a_strong_random_secret_key"
-   NEXTAUTH_URL="https://your-domain.vercel.app"
+   NEXTAUTH_SECRET="your_strong_random_secret_key"
+   NEXTAUTH_URL="https://your-domain.com"
    ```
 
-3. **Deploy & Migrate**:
+3. **Deploy & Push Schema**:
    ```bash
    npx prisma db push
    npm run db:seed
@@ -128,31 +149,27 @@ To deploy to Vercel with hosted PostgreSQL (Supabase, Neon, Railway):
 
 ---
 
-## ✦ External Book Metadata Architecture
-
-- **Open Library Search API**: Integrated via `lib/books/providers/openlibrary.ts` with server-side abort controller timeouts (6s) and query sanitization.
-- **Open Library Covers**: Resolves high-resolution cover artwork by cover ID or ISBN-13 with automatic fallback cards when artwork is unavailable.
-- **Normalized Internal Model**: All external providers map to a unified `NormalizedBookMetadata` model (`lib/books/normalize.ts`), insulating the rest of the application from third-party schema differences.
-- **Manual Book Entry**: When an ISBN or obscure volume is unindexed, scholars can manually scribe any tome with custom title, authors, spine colors, and attributes.
-
----
-
 ## ✦ Project Structure
 
 ```
+├── .github/
+│   └── workflows/ci.yml       # GitHub Actions CI workflow (lint, tsc, test, build)
 ├── app/
-│   ├── layout.tsx             # Root layout with Cinzel fonts & Navigation shell
-│   ├── page.tsx               # Feature A: Library Entrance
+│   ├── layout.tsx             # Root layout with Cinzel typography & Navigation shell
+│   ├── page.tsx               # Feature A: Library Entrance & Vitals
+│   ├── not-found.tsx          # Hogwarts-themed 404 page ("The Vanishing Corridor")
+│   ├── error.tsx              # Gothic error boundary ("The Enchantment Falters")
 │   ├── globals.css            # Hogwarts design tokens, parchment styles, wooden shelves
 │   ├── library/page.tsx       # Feature B: 2D Bookshelf & collection
-│   ├── discover/page.tsx      # Feature J: External discovery & curated suggestions
-│   ├── departments/page.tsx   # Feature C: Magical Departments
-│   ├── journal/page.tsx       # Feature G: Reading Journal chronicles
-│   ├── observatory/page.tsx   # Feature I: Reading Observatory & statistics
-│   ├── settings/page.tsx      # Feature: Settings, storage status, JSON backup
-│   ├── books/[id]/page.tsx    # Feature E: Open Tome detail experience
+│   ├── discover/page.tsx      # Feature D: External discovery & curated suggestions
+│   ├── departments/page.tsx   # Feature E: Magical Departments
+│   ├── journal/page.tsx       # Feature F: Reading Journal chronicles
+│   ├── observatory/page.tsx   # Feature G: Reading Observatory & statistics
+│   ├── settings/page.tsx      # Feature H: Settings, storage status, JSON backup/restore
+│   ├── books/[id]/page.tsx    # Feature C: Open Tome detail experience
 │   └── api/                   # Typed Next.js Route Handlers
-│       ├── books/             # Collection CRUD & OpenLibrary search
+│       ├── backup/            # Versioned JSON export & dry-run import
+│       ├── books/             # Collection CRUD & Open Library search
 │       ├── departments/       # Department listing & custom wing creation
 │       ├── quotes/            # Literary excerpts CRUD
 │       ├── sessions/          # Reading sessions logging
@@ -162,28 +179,37 @@ To deploy to Vercel with hosted PostgreSQL (Supabase, Neon, Railway):
 ├── components/
 │   ├── layout/Navigation.tsx  # Responsive desktop sidebar & mobile navigation
 │   ├── library/Bookshelf.tsx  # Interactive 2D wooden bookshelf & filter toolbar
-│   ├── books/BookSpine.tsx    # Realistic book spine with ribbon & rating badge
-│   ├── books/BookCard.tsx     # Rich manuscript card component
+│   ├── books/BookSpine.tsx    # Realistic book spine with ribbon, rating, & reduced-motion
+│   ├── books/BookCard.tsx     # Rich manuscript card component with fallback artwork
 │   ├── books/BookOpeningModal.tsx # Open tome reading record modal
-│   └── forms/AddBookModal.tsx # Multi-step discovery, manual entry, & celebration
+│   └── forms/AddBookModal.tsx # Multi-step discovery, manual entry, & celebration sparkles
+├── docs/
+│   ├── ARCHITECTURE.md        # Deep dive into architecture, layers, and data flow
+│   ├── DEVELOPMENT.md         # Comprehensive local developer setup & commands
+│   └── TESTING.md             # Vitest test suite breakdown and verification steps
 ├── lib/
 │   ├── prisma.ts              # Singleton Prisma client
 │   ├── auth.ts                # Server-side user ownership resolution
+│   ├── stats.ts               # Pure reading statistics, streak, & goal calculation engine
 │   ├── books/normalize.ts     # Metadata normalization
-│   ├── books/providers/       # OpenLibrary provider
-│   └── validations/           # Zod validation schemas
+│   ├── books/providers/       # Open Library provider with 6s AbortController timeout
+│   └── validations/           # Zod validation schemas (book, journal, session, backup)
 ├── prisma/
 │   ├── schema.prisma          # Prisma schema (SQLite dev)
 │   ├── schema.postgresql.prisma # PostgreSQL production schema
 │   └── seed.ts                # Rich initial seed script
 └── tests/
-    └── unit/                  # Vitest unit test suite
+    └── unit/                  # Vitest unit test suite (29 tests)
 ```
 
 ---
 
-## ✦ Security & Ownership Principles
+## ✦ Recommended Repository Topics
 
-1. **Server-Side Enforcement**: `userId` is never trusted from client-submitted payloads. All database queries and mutations call `getCurrentUser()` on the server and scope operations strictly to the user's records.
-2. **Data Privacy**: Personal reading notes, quotes, and reflections are strictly private and never transmitted to external services.
-3. **Graceful Degeneration**: External metadata API interruptions or missing covers fail gracefully with local fallbacks rather than crashing application flows.
+`personal-library`, `reading-tracker`, `nextjs`, `react`, `typescript`, `prisma`, `dark-academia`, `hogwarts-library`, `open-library`, `vitest`, `tailwind-css`
+
+---
+
+## ✦ License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.

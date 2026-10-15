@@ -92,6 +92,7 @@ export default function DiscoverPage() {
   const [results, setResults] = useState<NormalizedBookMetadata[]>([]);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [departments, setDepartments] = useState<any[]>([]);
+  const abortControllerRef = React.useRef<AbortController | null>(null);
 
   // Add Modal State
   const [modalOpen, setModalOpen] = useState(false);
@@ -102,16 +103,31 @@ export default function DiscoverPage() {
       .then((res) => res.json())
       .then((data) => setDepartments(data.departments || []))
       .catch((err) => console.error("Error loading departments:", err));
+
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim() || query.trim().length < 2) return;
 
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setSearching(true);
     setSearchError(null);
     try {
-      const res = await fetch(`/api/books/search?q=${encodeURIComponent(query.trim())}`);
+      const res = await fetch(
+        `/api/books/search?q=${encodeURIComponent(query.trim())}`,
+        { signal: controller.signal }
+      );
       const data = await res.json();
       if (res.ok) {
         setResults(data.results || []);
@@ -121,10 +137,14 @@ export default function DiscoverPage() {
       } else {
         setSearchError(data.error || "Search ritual failed.");
       }
-    } catch {
-      setSearchError("Failed to reach external archives. You may scribe this book manually.");
+    } catch (err: unknown) {
+      if ((err as Error).name !== "AbortError") {
+        setSearchError("Failed to reach external archives. You may scribe this book manually.");
+      }
     } finally {
-      setSearching(false);
+      if (abortControllerRef.current === controller) {
+        setSearching(false);
+      }
     }
   };
 

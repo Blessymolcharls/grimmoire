@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { ObservatoryClient } from "./ObservatoryClient";
+import { calculatePagesRead } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -77,14 +78,7 @@ export default async function ObservatoryPage() {
     where: { userId: user.id },
     select: { pageCount: true, currentPage: true, readingStatus: true },
   });
-  let totalPages = 0;
-  for (const b of allBooksPages) {
-    if (b.readingStatus === "COMPLETED" && b.pageCount) {
-      totalPages += b.pageCount;
-    } else if (b.currentPage) {
-      totalPages += b.currentPage;
-    }
-  }
+  const totalPages = calculatePagesRead(allBooksPages);
 
   // Monthly completed
   const startOfYear = new Date(`${currentYear}-01-01T00:00:00.000Z`);

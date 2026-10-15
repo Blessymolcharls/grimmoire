@@ -267,6 +267,7 @@ export function AddBookModal({
             </div>
             <button
               onClick={onClose}
+              aria-label="Close modal"
               className="p-1 rounded-lg text-[#B7ADBD] hover:text-[#E9DCC1] hover:bg-[#21162E] transition-colors"
             >
               <X className="w-5 h-5" />

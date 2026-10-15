@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Settings,
   Database,
   Download,
+  Upload,
   Target,
   CheckCircle2,
+  AlertCircle,
+  X,
+  Sparkles,
 } from "lucide-react";
 
 interface SettingsClientProps {
@@ -22,6 +26,18 @@ interface SettingsClientProps {
   goalTarget: number;
 }
 
+interface BackupPreview {
+  version: string;
+  exportedAt: string;
+  scholarName: string;
+  totalTomesInBackup: number;
+  newTomesToInscribe: number;
+  existingTomesToKeep: number;
+  departmentsInBackup: number;
+  journalEntriesInBackup: number;
+  goalsInBackup: number;
+}
+
 export function SettingsClient({
   user,
   bookCount,
@@ -34,6 +50,15 @@ export function SettingsClient({
   const [savingGoal, setSavingGoal] = useState(false);
   const [goalSaved, setGoalSaved] = useState(false);
   const [exporting, setExporting] = useState(false);
+
+  // Restore / Import state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importSuccess, setImportSuccess] = useState<string | null>(null);
+  const [previewData, setPreviewData] = useState<BackupPreview | null>(null);
+  const [pendingArchive, setPendingArchive] = useState<unknown | null>(null);
+  const [restoring, setRestoring] = useState(false);
 
   const handleSaveGoal = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,31 +86,11 @@ export function SettingsClient({
   const handleExportData = async () => {
     setExporting(true);
     try {
-      const [booksRes, journalRes, sessionsRes, statsRes] = await Promise.all([
-        fetch("/api/books?limit=1000"),
-        fetch("/api/journal"),
-        fetch("/api/sessions"),
-        fetch("/api/stats"),
-      ]);
+      const res = await fetch("/api/backup/export");
+      if (!res.ok) throw new Error("Export failed");
+      const archive = await res.json();
 
-      const [booksData, journalData, sessionsData, statsData] = await Promise.all([
-        booksRes.json(),
-        journalRes.json(),
-        sessionsRes.json(),
-        statsRes.json(),
-      ]);
-
-      const archiveBackup = {
-        exportedAt: new Date().toISOString(),
-        libraryTitle: "Grimmoire: The Hogwarts Library — Archive Backup",
-        scholar: user,
-        stats: statsData,
-        books: booksData.books || [],
-        journal: journalData.entries || [],
-        sessions: sessionsData.sessions || [],
-      };
-
-      const blob = new Blob([JSON.stringify(archiveBackup, null, 2)], {
+      const blob = new Blob([JSON.stringify(archive, null, 2)], {
         type: "application/json",
       });
       const url = URL.createObjectURL(blob);
@@ -100,6 +105,80 @@ export function SettingsClient({
       console.error("Export error:", err);
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportError(null);
+    setImportSuccess(null);
+    setImporting(true);
+
+    try {
+      const text = await file.text();
+      const parsedJson = JSON.parse(text);
+
+      // Perform dry-run preview check with the server
+      const res = await fetch("/api/backup/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          archive: parsedJson,
+          dryRun: true,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setImportError(data.error || "Incompatible or malformed archive file.");
+        return;
+      }
+
+      setPreviewData(data);
+      setPendingArchive(parsedJson);
+    } catch (err) {
+      console.error("Parse error:", err);
+      setImportError("Failed to parse JSON file. Ensure the file is a valid Grimmoire archive.");
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleConfirmRestore = async () => {
+    if (!pendingArchive) return;
+    setRestoring(true);
+    setImportError(null);
+
+    try {
+      const res = await fetch("/api/backup/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          archive: pendingArchive,
+          dryRun: false,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setImportError(data.error || "Failed to restore archive.");
+        return;
+      }
+
+      setImportSuccess(data.message);
+      setPreviewData(null);
+      setPendingArchive(null);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (err) {
+      console.error("Restore error:", err);
+      setImportError("Network error during archive restoration.");
+    } finally {
+      setRestoring(false);
     }
   };
 
@@ -177,11 +256,12 @@ export function SettingsClient({
               value={goalTarget}
               onChange={(e) => setGoalTarget(parseInt(e.target.value, 10) || 1)}
               className="w-28 bg-[#100D18] border border-[#C5A56A]/40 rounded-xl px-3 py-2 text-sm text-[#E9DCC1] focus:outline-none focus:border-[#C5A56A]"
+              aria-label="Annual target volumes"
             />
             <button
               type="submit"
               disabled={savingGoal}
-              className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#C5A56A] to-[#A08048] text-[#100D18] font-bold text-xs shadow hover:from-[#DFCA9B] hover:to-[#C5A56A] disabled:opacity-50"
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#C5A56A] to-[#A08048] text-[#100D18] font-bold text-xs shadow hover:from-[#DFCA9B] hover:to-[#C5A56A] disabled:opacity-50 transition-all"
             >
               {savingGoal ? "Saving..." : "Update Target"}
             </button>
@@ -234,27 +314,144 @@ export function SettingsClient({
           </div>
         </div>
 
-        {/* Data Backup Action */}
+        {/* Data Backup & Restore Action */}
         <div className="pt-4 border-t border-[#C5A56A]/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h4 className="font-serif-magical text-sm font-bold text-[#E9DCC1]">
-              Export Full Library Chronicle
+              Library Chronicle Backup & Restoration
             </h4>
             <p className="text-xs text-[#8E8495] mt-0.5">
-              Download all tomes, reading progress, reviews, quotes, and journal entries as JSON.
+              Export versioned JSON archive (v1.0.0) or safely restore tomes with duplicate protection.
             </p>
           </div>
 
-          <button
-            onClick={handleExportData}
-            disabled={exporting}
-            className="px-5 py-2.5 rounded-xl bg-[#21162E] hover:bg-[#39251F] text-[#F3D9A0] border border-[#C5A56A]/40 text-xs font-serif-magical flex items-center gap-2 transition-colors disabled:opacity-50"
-          >
-            <Download className="w-4 h-4 text-[#C5A56A]" />
-            <span>{exporting ? "Compiling..." : "Export Archive (JSON)"}</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelected}
+              accept=".json,application/json"
+              className="hidden"
+              aria-label="Upload archive JSON file"
+            />
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importing}
+              className="px-4 py-2.5 rounded-xl bg-[#21162E] hover:bg-[#39251F] text-[#E9DCC1] border border-[#C5A56A]/40 text-xs font-serif-magical flex items-center gap-2 transition-colors disabled:opacity-50"
+            >
+              <Upload className="w-4 h-4 text-[#C5A56A]" />
+              <span>{importing ? "Reading..." : "Restore Archive (JSON)"}</span>
+            </button>
+
+            <button
+              onClick={handleExportData}
+              disabled={exporting}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#C5A56A] to-[#A08048] text-[#100D18] font-bold text-xs font-serif-magical flex items-center gap-2 transition-all hover:from-[#DFCA9B] hover:to-[#C5A56A] disabled:opacity-50 shadow-md"
+            >
+              <Download className="w-4 h-4 text-[#100D18]" />
+              <span>{exporting ? "Compiling..." : "Export Full Archive (JSON)"}</span>
+            </button>
+          </div>
         </div>
+
+        {/* Feedback Messages */}
+        {importError && (
+          <div className="p-3.5 rounded-xl bg-rose-950/70 border border-rose-800/60 text-xs text-rose-300 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{importError}</span>
+          </div>
+        )}
+
+        {importSuccess && (
+          <div className="p-3.5 rounded-xl bg-emerald-950/70 border border-emerald-800/60 text-xs text-emerald-300 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+            <span>{importSuccess}</span>
+          </div>
+        )}
       </div>
+
+      {/* Restore Preview Modal */}
+      {previewData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="w-full max-w-lg bg-[#140E1D] border-2 border-[#C5A56A]/40 rounded-2xl p-6 space-y-5 text-[#E9DCC1] shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#C5A56A]/20">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#C5A56A]" />
+                <h3 className="font-serif-magical font-bold text-base text-[#F3D9A0]">
+                  Archive Restoration Preview
+                </h3>
+              </div>
+              <button
+                onClick={() => {
+                  setPreviewData(null);
+                  setPendingArchive(null);
+                }}
+                className="text-[#8E8495] hover:text-[#E9DCC1]"
+                aria-label="Close modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-[#B7ADBD]">
+              Grimmoire inspected the archive (schema v{previewData.version}, exported by{" "}
+              <strong>{previewData.scholarName}</strong>). Existing tomes in your library are
+              preserved and will not be overwritten.
+            </p>
+
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="p-3 rounded-xl bg-[#100D18] border border-[#C5A56A]/20">
+                <span className="text-emerald-400 font-bold font-serif-magical text-lg">
+                  +{previewData.newTomesToInscribe}
+                </span>
+                <p className="text-[#8E8495] text-[11px] mt-0.5">New Tomes to Inscribe</p>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#100D18] border border-[#C5A56A]/20">
+                <span className="text-[#C5A56A] font-bold font-serif-magical text-lg">
+                  {previewData.existingTomesToKeep}
+                </span>
+                <p className="text-[#8E8495] text-[11px] mt-0.5">Existing Tomes Preserved</p>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#100D18] border border-[#C5A56A]/20">
+                <span className="text-[#F3D9A0] font-bold font-serif-magical text-lg">
+                  {previewData.journalEntriesInBackup}
+                </span>
+                <p className="text-[#8E8495] text-[11px] mt-0.5">Journal Chronicles</p>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#100D18] border border-[#C5A56A]/20">
+                <span className="text-indigo-400 font-bold font-serif-magical text-lg">
+                  {previewData.departmentsInBackup}
+                </span>
+                <p className="text-[#8E8495] text-[11px] mt-0.5">Departments</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#C5A56A]/20">
+              <button
+                onClick={() => {
+                  setPreviewData(null);
+                  setPendingArchive(null);
+                }}
+                disabled={restoring}
+                className="px-4 py-2 rounded-xl bg-[#21162E] text-[#B7ADBD] hover:text-[#E9DCC1] text-xs font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmRestore}
+                disabled={restoring}
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#C5A56A] to-[#A08048] text-[#100D18] font-bold text-xs shadow hover:from-[#DFCA9B] hover:to-[#C5A56A] disabled:opacity-50"
+              >
+                {restoring ? "Inscribing..." : "Confirm & Inscribe Archive"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
