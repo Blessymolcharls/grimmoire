@@ -30,7 +30,7 @@ export function Navigation() {
   return (
     <>
       {/* Desktop Persistent Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-[#140E1D]/90 border-r border-[#C5A56A]/20 backdrop-blur-md sticky top-0 h-screen z-40 select-none shadow-2xl">
+      <aside className="hidden md:flex flex-col w-64 flex-shrink-0 bg-[#140E1D]/90 border-r border-[#C5A56A]/20 backdrop-blur-md sticky top-0 h-screen z-40 select-none shadow-2xl">
         {/* Crest & Header */}
         <div className="p-6 border-b border-[#C5A56A]/15 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#C5A56A] to-[#39251F] p-0.5 shadow-lg flex items-center justify-center">
@@ -99,7 +99,7 @@ export function Navigation() {
         </nav>
 
         {/* Footer / Scholar Status */}
-        <div className="p-4 border-t border-[#C5A56A]/15 bg-[#100D18]/60 text-xs">
+        <div className="p-4 border-t border-[#C5A56A]/15 bg-[#100D18]/60 text-xs mt-auto flex-shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-full bg-[#39251F] border border-[#C5A56A]/40 flex items-center justify-center text-[#E9DCC1] font-serif-magical font-bold text-xs">
               ✦

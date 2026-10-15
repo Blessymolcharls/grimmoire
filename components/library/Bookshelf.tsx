@@ -296,7 +296,7 @@ export function Bookshelf({ initialBooks, departments, onRefresh }: BookshelfPro
             {shelves.map((shelfBooks, shelfIndex) => (
               <div key={shelfIndex} className="relative pt-6">
                 {/* Books in this Shelf Row */}
-                <div className="min-h-[220px] flex items-end gap-1.5 sm:gap-2.5 px-3 sm:px-6 overflow-x-auto pb-0">
+                <div className="min-h-[260px] flex items-end gap-1.5 sm:gap-2.5 px-3 sm:px-6 overflow-x-auto pb-0 no-scrollbar">
                   {shelfBooks.map((book, bookIdx) => (
                     <BookSpine
                       key={book.id}

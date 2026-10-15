@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Compass,
   Search,
@@ -97,6 +98,7 @@ export default function DiscoverPage() {
   // Add Modal State
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedBookToAdd, setSelectedBookToAdd] = useState<NormalizedBookMetadata | null>(null);
+  const [inscribedMessage, setInscribedMessage] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/departments")
@@ -155,6 +157,22 @@ export default function DiscoverPage() {
 
   return (
     <div className="flex-1 p-4 sm:p-8 lg:p-10 space-y-10 max-w-7xl mx-auto w-full">
+      {/* Success Notification Banner */}
+      {inscribedMessage && (
+        <div className="p-4 rounded-2xl bg-emerald-950/80 border border-emerald-600/50 text-emerald-200 text-sm flex items-center justify-between shadow-xl animate-fade-in">
+          <div className="flex items-center gap-2.5">
+            <Sparkles className="w-4 h-4 text-emerald-400" />
+            <span>{inscribedMessage}</span>
+          </div>
+          <Link
+            href="/library"
+            className="px-3 py-1 rounded-lg bg-emerald-900/80 hover:bg-emerald-800 text-emerald-100 text-xs font-semibold underline"
+          >
+            Go to My Shelves →
+          </Link>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#C5A56A]/20">
         <div>
@@ -247,30 +265,37 @@ export default function DiscoverPage() {
             {results.map((book, idx) => (
               <div
                 key={idx}
-                className="parchment-card rounded-2xl p-5 border border-[#C5A56A]/20 flex flex-col justify-between hover:border-[#C5A56A]/50 transition-all"
+                className="parchment-card rounded-2xl p-5 border border-[#C5A56A]/20 flex flex-col justify-between hover:border-[#C5A56A]/50 transition-all h-full"
               >
                 <div>
                   <div className="flex gap-4">
-                    <div className="w-20 h-28 flex-shrink-0 rounded-md overflow-hidden bg-[#100D18] border border-[#C5A56A]/30">
+                    <div className="relative w-20 h-28 sm:w-24 sm:h-32 flex-shrink-0 rounded-md overflow-hidden bg-[#171120] border border-[#C5A56A]/30 shadow-md">
                       {book.coverUrl ? (
                         <img
                           src={book.coverUrl}
                           alt={book.title}
                           className="w-full h-full object-cover"
+                          loading="lazy"
                           onError={(e) => {
                             (e.target as HTMLElement).style.display = "none";
                           }}
                         />
                       ) : null}
-                      <div className="w-full h-full flex items-center justify-center text-[10px] text-[#8E8495] font-serif-magical p-1 text-center -z-10">
-                        {book.title}
+                      <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center -z-10 bg-gradient-to-b from-[#2A1B16] to-[#100D18]">
+                        <Sparkles className="w-4 h-4 text-[#C5A56A]/60 mb-1" />
+                        <p className="text-[9px] font-serif-magical text-[#E9DCC1] line-clamp-2 leading-tight">
+                          {book.title}
+                        </p>
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-serif-magical text-[#E9DCC1] font-bold text-base line-clamp-2 leading-tight">
+                      <h3
+                        className="font-serif-magical text-[#E9DCC1] font-bold text-base line-clamp-2 leading-snug break-words"
+                        title={book.title}
+                      >
                         {book.title}
                       </h3>
-                      <p className="text-xs text-[#C5A56A] mt-1 truncate">
+                      <p className="text-xs text-[#C5A56A] mt-1 truncate font-medium">
                         {book.authors.join(", ")}
                       </p>
                       <div className="text-[11px] text-[#8E8495] mt-1 space-y-0.5">
@@ -280,14 +305,21 @@ export default function DiscoverPage() {
                     </div>
                   </div>
 
-                  {book.description && (
-                    <p className="text-xs text-[#B7ADBD] mt-3 line-clamp-3 italic">
-                      &quot;{book.description}&quot;
+                  {book.description ? (
+                    <p className="text-xs text-[#B7ADBD] mt-3 line-clamp-3 italic leading-relaxed">
+                      &ldquo;{book.description}&rdquo;
+                    </p>
+                  ) : (
+                    <p className="text-xs text-[#8E8495]/60 mt-3 italic">
+                      Awaiting scholarly annotation.
                     </p>
                   )}
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-[#C5A56A]/15 flex justify-end">
+                <div className="mt-auto pt-3 border-t border-[#C5A56A]/15 flex items-center justify-between">
+                  <span className="text-[10px] text-[#8E8495] uppercase tracking-wider">
+                    Global Registry
+                  </span>
                   <button
                     onClick={() => handleOpenAddModal(book)}
                     className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#C5A56A] to-[#A08048] text-[#100D18] font-bold text-xs shadow hover:from-[#DFCA9B] hover:to-[#C5A56A] transition-all flex items-center gap-1.5"
@@ -320,50 +352,59 @@ export default function DiscoverPage() {
           {CURATED_SUGGESTIONS.map((book, idx) => (
             <div
               key={idx}
-              className="parchment-card rounded-2xl p-5 border border-[#C5A56A]/20 flex flex-col justify-between hover:border-[#C5A56A]/60 transition-all group"
+              className="parchment-card rounded-2xl p-5 border border-[#C5A56A]/20 flex flex-col justify-between hover:border-[#C5A56A]/60 transition-all group h-full"
             >
               <div>
                 <div className="flex gap-4">
-                  <div className="w-20 h-28 flex-shrink-0 rounded-md overflow-hidden bg-[#100D18] border border-[#C5A56A]/30">
+                  <div className="relative w-20 h-28 sm:w-24 sm:h-32 flex-shrink-0 rounded-md overflow-hidden bg-[#171120] border border-[#C5A56A]/30 shadow-md group-hover:border-[#C5A56A]/60 transition-colors">
                     {book.coverUrl ? (
                       <img
                         src={book.coverUrl}
-                        alt={book.title}
+                        alt={`Cover of ${book.title}`}
                         className="w-full h-full object-cover"
+                        loading="lazy"
                         onError={(e) => {
                           (e.target as HTMLElement).style.display = "none";
                         }}
                       />
                     ) : null}
-                    <div className="w-full h-full flex items-center justify-center text-[10px] text-[#8E8495] font-serif-magical p-1 text-center -z-10">
-                      {book.title}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center -z-10 bg-gradient-to-b from-[#2A1B16] to-[#100D18]">
+                      <Sparkles className="w-4 h-4 text-[#C5A56A]/60 mb-1" />
+                      <p className="text-[9px] font-serif-magical text-[#E9DCC1] line-clamp-2 leading-tight">
+                        {book.title}
+                      </p>
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-serif-magical text-[#E9DCC1] font-bold text-base line-clamp-2 leading-tight group-hover:text-[#F3D9A0] transition-colors">
+                    <h3
+                      className="font-serif-magical text-[#E9DCC1] font-bold text-base line-clamp-2 leading-snug break-words group-hover:text-[#F3D9A0] transition-colors"
+                      title={book.title}
+                    >
                       {book.title}
                     </h3>
-                    <p className="text-xs text-[#C5A56A] mt-1 truncate">
+                    <p className="text-xs text-[#C5A56A] mt-1 truncate font-medium">
                       {book.authors.join(", ")}
                     </p>
-                    <div className="text-[11px] text-[#8E8495] mt-1">
-                      <span>Anno {book.publicationYear}</span> • <span>{book.pageCount} pages</span>
+                    <div className="text-[11px] text-[#8E8495] mt-1 flex items-center gap-1.5">
+                      <span>Anno {book.publicationYear}</span>
+                      <span>•</span>
+                      <span>{book.pageCount} pages</span>
                     </div>
                   </div>
                 </div>
 
-                <p className="text-xs text-[#B7ADBD] mt-3 line-clamp-3 italic">
-                  &quot;{book.description}&quot;
+                <p className="text-xs text-[#B7ADBD] mt-3 line-clamp-3 italic leading-relaxed">
+                  &ldquo;{book.description}&rdquo;
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-[#C5A56A]/15 flex items-center justify-between">
+              <div className="mt-auto pt-3 border-t border-[#C5A56A]/15 flex items-center justify-between">
                 <span className="text-[10px] text-[#8E8495] uppercase tracking-wider">
                   Curated Suggestion
                 </span>
                 <button
                   onClick={() => handleOpenAddModal(book)}
-                  className="px-3.5 py-1.5 rounded-lg bg-[#21162E] hover:bg-[#C5A56A] text-[#F3D9A0] hover:text-[#100D18] border border-[#C5A56A]/40 text-xs font-semibold transition-all flex items-center gap-1"
+                  className="px-3.5 py-1.5 rounded-lg bg-[#21162E] hover:bg-[#C5A56A] text-[#F3D9A0] hover:text-[#100D18] border border-[#C5A56A]/40 text-xs font-semibold transition-all flex items-center gap-1.5"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add to Shelves</span>
@@ -384,7 +425,8 @@ export default function DiscoverPage() {
         departments={departments}
         initialBook={selectedBookToAdd}
         onBookAdded={() => {
-          // Success handled in modal with confetti
+          setInscribedMessage("✦ Tome successfully inscribed into your library shelves!");
+          setTimeout(() => setInscribedMessage(null), 5000);
         }}
       />
     </div>

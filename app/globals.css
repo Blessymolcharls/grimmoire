@@ -101,12 +101,11 @@
 
 /* Book Spines */
 .book-spine {
-  transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.25s ease;
+  transition: box-shadow 0.25s ease;
   transform-origin: bottom center;
 }
 
 .book-spine:hover {
-  transform: translateY(-16px) scale(1.02);
   z-index: 20;
   box-shadow: 0 16px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(197, 165, 106, 0.3);
 }
@@ -129,4 +128,13 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #C5A56A;
+}
+
+/* Hide scrollbar for clean shelf surface */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
